@@ -1,0 +1,60 @@
+---
+- name: Instalar Apache y PHP-fpm en servidores centos
+  hosts: centos
+  become: true
+  vars_files:
+    - ../vars/database.yaml
+
+  tasks:
+
+   - name: Instalar apache y php-fpm
+     ansible.builtin.dnf:
+       name:
+         - httpd
+         - php
+         - php-fpm
+         - php-mysqlnd
+         - python3-libsemanage
+       state: present
+
+   - name: Iniciar y habilitar apache
+     ansible.builtin.service:
+       name: httpd
+       state: started
+       enabled: true
+    
+   - name: Iniciar y habilitar php-fpm
+     ansible.builtin.service:
+       name: php-fpm
+       state: started
+       enabled: true
+
+   - name: habilitar firewalld
+     ansible.builtin.service:
+       name: firewalld
+       state: started
+       enabled: true
+
+   - name: Habilitar HTTP en el firewall
+     ansible.posix.firewalld:
+       service: http
+       permanent: true
+       state: enabled
+       immediate: true
+  
+   - name: Instalar PHP application
+     ansible.builtin.template:
+       src: ../templates/cumple.j2
+       dest: /var/www/html/index.php
+       mode: '0644'
+       owner: apache
+       group: apache
+
+   - name: Habilitar booleanos Selinux para acceder a la base de datos desde apache
+     ansible.posix.seboolean:
+       name: "{{ item }}"
+       state: true
+       persistent: true
+     loop:
+       - httpd_can_network_connect_db
+       - httpd_can_network_connect
