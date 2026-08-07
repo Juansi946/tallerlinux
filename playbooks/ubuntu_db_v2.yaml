@@ -1,5 +1,5 @@
 ---
-- name: Install and configure mariadb on ubuntu
+- name: Install and configure MariaDB on Ubuntu
   hosts: ubuntu01
   become: true
 
@@ -8,33 +8,62 @@
 
   tasks:
 
-    - name: Install mariadb server
+    - name: Install MariaDB Server
       ansible.builtin.apt:
         name: mariadb-server
         state: present
+        update_cache: true
 
-    - name: Bind mariadb to any interface
+    - name: Install PyMySQL dependency
+      ansible.builtin.apt:
+        name: python3-pymysql
+        state: present
+
+    - name: Bind MariaDB to any interface
       ansible.builtin.lineinfile:
         path: /etc/mysql/mariadb.conf.d/50-server.cnf
         regexp: '^bind-address'
         line: 'bind-address = 0.0.0.0'
-      notify: Restart mariadb server
+      notify: Restart MariaDB
 
-    - name: Mariadb started and enabled
+    - name: Start and enable MariaDB
       ansible.posix.systemd_service:
         name: mariadb
         state: started
         enabled: true
 
-    - name: Allow connections to database in UFW
+    - name: Copy database script
+      ansible.builtin.copy:
+        src: ../files/database.sql
+        dest: /tmp/database.sql
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Import database
+      community.mysql.mysql_db:
+        state: import
+        name: all
+        target: /tmp/database.sql
+
+    - name: Create application database user
+      community.mysql.mysql_user:
+        name: "{{ db_user }}"
+        password: "{{ db_password }}"
+        priv: "{{ db_dbase }}.*:ALL"
+        host: "%"
+        state: present
+
+    - name: Allow MariaDB only from CentOS server
       community.general.ufw:
-        port: 3306
-        proto: tcp
         rule: allow
+        proto: tcp
+        port: "3306"
+        src: "{{ hostvars[groups['centos'][0]].ansible_host }}"
 
   handlers:
 
-    - name: Restart mariadb server
+    - name: Restart MariaDB
       ansible.posix.systemd_service:
         name: mariadb
         state: restarted
