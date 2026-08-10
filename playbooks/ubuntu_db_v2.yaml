@@ -54,12 +54,13 @@
         host: "%"
         state: present
 
-    - name: Allow MariaDB only from CentOS server
-      community.general.ufw:
-        rule: allow
-        proto: tcp
-        port: "3306"
-        src: "{{ hostvars[groups['centos'][0]].ansible_host }}"
+     - name: Allow MariaDB only from CentOS servers
+       community.general.ufw:
+         rule: allow
+         proto: tcp
+         port: "3306"
+         src: "{{ hostvars[item].ansible_host }}"
+       loop: "{{ groups['centos'] }}"
 
   handlers:
 
