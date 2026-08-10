@@ -27,44 +27,47 @@
       notify: Restart MariaDB
 
     - name: Start and enable MariaDB
-      ansible.posix.systemd_service:
+      ansible.builtin.systemd_service:
         name: mariadb
         state: started
         enabled: true
 
     - name: Copy database script
       ansible.builtin.copy:
-        src: ../files/database.sql
-        dest: /tmp/database.sql
+        src: ../files/cumpleanios.sql
+        dest: /tmp/cumpleanios.sql
         owner: root
         group: root
         mode: '0644'
 
     - name: Import database
-      community.mysql.mysql_db:
+      ansible.mysql.mysql_db:
         state: import
         name: all
-        target: /tmp/database.sql
+        target: /tmp/cumpleanios.sql
+        login_unix_socket: /run/mysqld/mysqld.sock
 
     - name: Create application database user
-      community.mysql.mysql_user:
-        name: "{{ db_user }}"
-        password: "{{ db_password }}"
-        priv: "{{ db_dbase }}.*:ALL"
+      ansible.mysql.mysql_user:
+        name: "{{ DB_USER }}"
+        password: "{{ DB_PASS }}"
+        priv: "{{ DB_DBASE }}.*:ALL"
         host: "%"
         state: present
+        login_unix_socket: /run/mysqld/mysqld.sock
 
-     - name: Allow MariaDB only from CentOS servers
-       community.general.ufw:
-         rule: allow
-         proto: tcp
-         port: "3306"
-         src: "{{ hostvars[item].ansible_host }}"
-       loop: "{{ groups['centos'] }}"
+    - name: Allow MariaDB only from CentOS servers
+      community.general.ufw:
+        rule: allow
+        proto: tcp
+        port: "3306"
+        src: "{{ hostvars[item].ansible_host }}"
+      loop: "{{ groups['centos'] }}"
 
   handlers:
 
     - name: Restart MariaDB
-      ansible.posix.systemd_service:
+      ansible.builtin.systemd_service:
         name: mariadb
         state: restarted
+
