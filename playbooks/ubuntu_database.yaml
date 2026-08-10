@@ -1,3 +1,4 @@
+
 ---
 - name: Install and configure MariaDB on Ubuntu
   hosts: ubuntu01
@@ -7,7 +8,6 @@
     - ../vars/database.yaml
 
   tasks:
-
     - name: Install MariaDB Server
       ansible.builtin.apt:
         name: mariadb-server
@@ -27,34 +27,32 @@
       notify: Restart MariaDB
 
     - name: Start and enable MariaDB
-      ansible.builtin.systemd_service:
+      ansible.posix.systemd_service:
         name: mariadb
         state: started
         enabled: true
 
     - name: Copy database script
       ansible.builtin.copy:
-        src: ../files/cumpleanios.sql
-        dest: /tmp/cumpleanios.sql
+        src: ../files/database.sql
+        dest: /tmp/database.sql
         owner: root
         group: root
         mode: '0644'
 
     - name: Import database
-      ansible.mysql.mysql_db:
+      community.mysql.mysql_db:
         state: import
         name: all
-        target: /tmp/cumpleanios.sql
-        login_unix_socket: /run/mysqld/mysqld.sock
+        target: /tmp/database.sql
 
     - name: Create application database user
-      ansible.mysql.mysql_user:
+      community.mysql.mysql_user:
         name: "{{ DB_USER }}"
-        password: "{{ DB_PASS }}"
+        password: "{{ DB_PASSWORD }}"
         priv: "{{ DB_DBASE }}.*:ALL"
         host: "%"
         state: present
-        login_unix_socket: /run/mysqld/mysqld.sock
 
     - name: Allow MariaDB only from CentOS servers
       community.general.ufw:
@@ -65,9 +63,9 @@
       loop: "{{ groups['centos'] }}"
 
   handlers:
-
     - name: Restart MariaDB
-      ansible.builtin.systemd_service:
+      ansible.posix.systemd_service:
         name: mariadb
         state: restarted
+
 
