@@ -56,7 +56,7 @@ Los playbooks se ejecutan utilizando el inventario ubicado en `inventory/hosts.i
 ### Hardening de Ubuntu
 
 ```bash
-ansible-playbook -i inventory/hosts.ini playbooks/hardening.yaml
+ansible-playbook -i inventory/hosts.ini playbooks/hardening.yaml --ask-become-pass
 ```
 
 ### Configuración de la base de datos
