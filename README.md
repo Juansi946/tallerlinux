@@ -84,3 +84,9 @@ tallerlinux/
 ├── LICENSE
 └── README.md
 ```
+
+## Usuario y contraseña de las maquinas virtuales y vault
+
+Usuario: sysadmin
+Contraseña: aslxlab
+Contraseña del vault: aslxlab
