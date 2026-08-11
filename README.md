@@ -87,6 +87,6 @@ tallerlinux/
 
 ## Usuario y contraseña de las maquinas virtuales y vault
 
-Usuario: sysadmin
-Contraseña: aslxlab
-Contraseña del vault: aslxlab
+* Usuario: sysadmin
+* Contraseña: aslxlab
+* Contraseña del vault: aslxlab
