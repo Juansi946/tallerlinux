@@ -1,0 +1,9 @@
+---
+- name: Implementacion del hardening para ubuntu
+  import_playbook: hardening.yaml
+
+- name: Implementacion del playbook de las bases de datos
+  import_playbook: ubuntu_database.yaml
+
+- name: Implementacion del playbook del servidor web
+  import_playbook: apache_php.yaml

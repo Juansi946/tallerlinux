@@ -40,12 +40,20 @@
         group: root
         mode: '0644'
 
+    - name: Check if database exists
+      ansible.mysql.mysql_info:
+        login_unix_socket: /run/mysqld/mysqld.sock
+        filter:
+          - databases
+      register: mysql_info
+
     - name: Import database
       ansible.mysql.mysql_db:
         state: import
         name: all
         target: /tmp/cumpleanios.sql
         login_unix_socket: /run/mysqld/mysqld.sock
+      when: "'cumples' not in mysql_info.databases"
 
     - name: Create application database user
       ansible.mysql.mysql_user:
@@ -56,6 +64,15 @@
         state: present
         login_unix_socket: /run/mysqld/mysqld.sock
 
+    - name: Create admin database user
+      ansible.mysql.mysql_user:
+        name: "{{ DB_ADMIN }}"
+        password: "{{ DB_ADMIN_PASS }}"
+        priv: "{{ DB_DBASE }}.*:ALL"
+        host: "%"
+        state: present
+        login_unix_socket: /run/mysqld/mysqld.sock
+                    
     - name: Allow MariaDB only from CentOS servers
       community.general.ufw:
         rule: allow
